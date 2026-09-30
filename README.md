@@ -1,4 +1,4 @@
-# CAPACITY CONNECT — Digital Capacity Building & Learning Management Portal
+# CAPACITY CONNECT - Digital Capacity Building & Learning Management Portal
 
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
 [![Vanilla JS](https://img.shields.io/badge/ES6%2B-Vanilla%20JS-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
