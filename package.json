@@ -1,0 +1,18 @@
+{
+  "name": "capacity-connect",
+  "version": "1.0.0",
+  "description": "CAPACITY CONNECT - Digital Capacity Building and Learning Management Portal",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "lms",
+    "capacity-building",
+    "competency-mapping",
+    "training-portal"
+  ],
+  "author": "Capacity Connect Team",
+  "license": "MIT"
+}

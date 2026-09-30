@@ -1,0 +1,182 @@
+/* ===================================================================
+   CAPACITY CONNECT - COMPETENCY MAPPING & TRAINER MATCHING STYLES
+   =================================================================== */
+
+.competency-header {
+  background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
+  color: #FFFFFF;
+  border-radius: var(--radius-xl);
+  padding: var(--space-xl);
+  margin-bottom: var(--space-xl);
+  position: relative;
+  overflow: hidden;
+}
+
+.competency-header h2 {
+  color: #FFFFFF;
+  font-size: 1.85rem;
+  margin-bottom: 6px;
+}
+
+.competency-header p {
+  color: #CBD5E1;
+  max-width: 680px;
+}
+
+/* Matchmaker Widget */
+.matchmaker-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.matchmaker-controls {
+  display: grid;
+  grid-template-columns: 2fr 1fr auto;
+  gap: var(--space-md);
+  align-items: flex-end;
+}
+
+.match-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-lg);
+  margin-top: var(--space-lg);
+}
+
+.trainer-match-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.trainer-match-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--brand-accent);
+}
+
+.match-rank-ribbon {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 10px;
+  background: var(--brand-accent-subtle);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--brand-accent);
+}
+
+.match-rank-ribbon.top-match {
+  background: #ECFDF5;
+  border-color: #A7F3D0;
+  color: #059669;
+}
+
+.trainer-card-bio {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: var(--space-md);
+}
+
+.trainer-card-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--brand-accent-subtle);
+  color: var(--brand-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.trainer-card-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.trainer-card-dept {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.match-score-bar-wrap {
+  margin: var(--space-sm) 0;
+}
+
+.match-score-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.825rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.competency-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: var(--space-sm) 0 var(--space-md) 0;
+}
+
+.competency-tag-pill {
+  padding: 3px 8px;
+  background: var(--bg-surface-alt);
+  border-radius: var(--radius-xs);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Competency Matrix Table */
+.matrix-status-chip {
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.matrix-status-chip.surplus {
+  background: #ECFDF5;
+  color: #059669;
+}
+
+.matrix-status-chip.adequate {
+  background: #EFF6FF;
+  color: #2563EB;
+}
+
+.matrix-status-chip.gap {
+  background: #FEF2F2;
+  color: #DC2626;
+  animation: pulseGap 2s infinite ease-in-out;
+}
+
+@keyframes pulseGap {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.proficiency-stars {
+  display: inline-flex;
+  gap: 2px;
+  color: #F59E0B;
+}

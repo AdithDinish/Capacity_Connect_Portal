@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CAPACITY CONNECT - Digital Capacity Building & Learning Management Portal</title>
+  <meta name="description" content="Centralized web-based learning management portal supporting organizational training, competency development, knowledge sharing, and automated competency mapping.">
+
+  <!-- Google Fonts: Lexend (headings) & Plus Jakarta Sans (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Style Sheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/assessment.css">
+  <link rel="stylesheet" href="css/competency.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <!-- External Libraries (CDN with fallback) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- ===================================================================
+       HEADER & NAVIGATION BAR
+       =================================================================== -->
+  <header class="site-header">
+    <div class="container-wide nav-container">
+      <!-- Brand Logo -->
+      <a href="javascript:void(0)" class="brand-logo" onclick="App.navigateTo('home')">
+        <div class="brand-icon-wrap">
+          <i data-lucide="layers" style="width:24px; height:24px;"></i>
+        </div>
+        <div class="brand-name">
+          <span class="brand-title">CAPACITY CONNECT</span>
+          <span class="brand-tagline">Digital L&D Portal</span>
+        </div>
+      </a>
+
+      <!-- Navigation Links -->
+      <nav class="nav-links" id="main-nav-links">
+        <a href="javascript:void(0)" class="nav-link active" data-target="home">
+          <i data-lucide="home"></i> Home
+        </a>
+        <a href="javascript:void(0)" class="nav-link" data-target="courses">
+          <i data-lucide="book-open"></i> Courses
+        </a>
+        <a href="javascript:void(0)" class="nav-link" data-target="competency">
+          <i data-lucide="git-merge"></i> Competency Matrix
+        </a>
+        <a href="javascript:void(0)" class="nav-link" data-target="library">
+          <i data-lucide="folder-archive"></i> Trainer Library
+        </a>
+        <!-- Role Specific Portal Hub -->
+        <a href="javascript:void(0)" class="nav-link" id="nav-portal-link" data-target="trainee-portal">
+          <i data-lucide="layout-dashboard"></i> My Portal
+        </a>
+      </nav>
+
+      <!-- Nav Actions Right -->
+      <div class="nav-actions">
+        <!-- Quick Search Button -->
+        <button class="btn btn-icon btn-ghost" id="nav-search-btn" title="Quick Search Portal (Ctrl+K)" aria-label="Search">
+          <i data-lucide="search"></i>
+        </button>
+
+        <!-- Verify Credential Button -->
+        <button class="btn btn-sm btn-outline" id="nav-verify-btn" title="Verify Certificate Authenticity" style="border-radius:var(--radius-full); font-size:0.775rem;">
+          <i data-lucide="shield-check" style="width:14px; height:14px;"></i>
+          <span>Verify Credential</span>
+        </button>
+
+        <!-- Quick Role Demo Switcher Dropdown -->
+        <div class="role-switcher-dropdown">
+          <button class="role-switcher-btn" id="role-switcher-btn" title="Quickly switch roles for demonstration">
+            <span class="role-indicator-dot trainee" id="nav-role-indicator"></span>
+            <span>Role Switcher</span>
+            <i data-lucide="chevron-down" style="width:14px; height:14px;"></i>
+          </button>
+
+          <div class="dropdown-menu" id="role-switcher-menu">
+            <div class="dropdown-header">Switch Demo User Role</div>
+            <button class="dropdown-item" data-demo-login="trainee">
+              <span class="badge badge-trainee">Trainee</span> Priya Sharma
+            </button>
+            <button class="dropdown-item" data-demo-login="trainer">
+              <span class="badge badge-trainer">Trainer</span> Dr. Marcus Vance
+            </button>
+            <button class="dropdown-item" data-demo-login="admin">
+              <span class="badge badge-admin">Admin</span> Eleanor Vance
+            </button>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item" onclick="store.setCurrentUser(null); App.navigateTo('home'); App.showToast('Public View', 'Operating as public visitor', 'info');">
+              <i data-lucide="user"></i> Public Visitor (Signed Out)
+            </button>
+          </div>
+        </div>
+
+        <!-- Notifications Bell -->
+        <div class="notification-btn-wrap">
+          <button class="btn btn-icon btn-ghost" id="notif-btn" aria-label="Notifications">
+            <i data-lucide="bell"></i>
+            <span class="unread-badge" id="notif-unread-count">3</span>
+          </button>
+
+          <div class="notification-panel" id="notif-panel">
+            <div class="notification-header">
+              <h4 style="font-size:0.95rem; margin:0;">Notifications</h4>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="badge badge-primary" id="notif-count-badge">3 New</span>
+                <button class="btn btn-sm btn-ghost" id="notif-mark-all-read" style="font-size:0.75rem; padding:2px 6px;">Clear all</button>
+              </div>
+            </div>
+            <div class="notification-list" id="notif-list-container">
+              <!-- Dynamically injected -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Theme Mode Toggle -->
+        <button class="btn btn-icon btn-ghost" id="theme-toggle-btn" aria-label="Toggle theme">
+          <i data-lucide="moon"></i>
+        </button>
+
+        <!-- Logged In User Avatar & Info -->
+        <div id="nav-user-actions" class="flex items-center gap-xs">
+          <button class="user-avatar-btn" onclick="App.navigateByRole(store.getCurrentUser() ? store.getCurrentUser().role : 'trainee')">
+            <div class="user-avatar-img" id="nav-user-avatar">PS</div>
+            <span style="font-size:0.875rem; font-weight:600;" id="nav-user-name">Priya Sharma</span>
+            <span class="badge badge-trainee" id="nav-user-role-badge">TRAINEE</span>
+          </button>
+          <button class="btn btn-icon btn-ghost" id="logout-btn" title="Sign Out">
+            <i data-lucide="log-out"></i>
+          </button>
+        </div>
+
+        <!-- Guest Actions -->
+        <div id="nav-guest-actions" class="flex items-center gap-xs hidden">
+          <button class="btn btn-sm btn-outline" onclick="App.openLoginModal()">Sign In</button>
+          <button class="btn btn-sm btn-primary" onclick="App.openRegisterModal()">Register</button>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <button class="btn btn-icon btn-ghost" id="mobile-menu-btn" style="display:none;" aria-label="Open menu">
+          <i data-lucide="menu"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Announcements Ticker Bar -->
+  <div class="announcements-bar">
+    <div class="container ticker-wrap" id="homepage-announcements-ticker">
+      <span class="ticker-badge"><i data-lucide="megaphone" style="width:14px; height:14px;"></i> URGENT</span>
+      <span class="ticker-content"><strong>Q4 2026 Enterprise Digital Competency Drive Launched:</strong> All engineering and analytics divisions are invited to enroll in Cloud Architecture and Applied AI certification pathways.</span>
+    </div>
+  </div>
+
+  <!-- Main Content Area with Routing Views -->
+  <main id="main-content">
+    
+    <!-- ===================================================================
+         VIEW 1: PUBLIC HOMEPAGE / PORTAL HUB
+         =================================================================== -->
+    <div class="app-view" id="home-view">
+      <!-- Hero Section -->
+      <section class="hero-section">
+        <div class="hero-glow"></div>
+        <div class="container hero-content">
+          <div>
+            <div class="hero-badge">
+              <i data-lucide="sparkles" style="width:16px; height:16px;"></i> Enterprise Capacity Building & LMS
+            </div>
+            <h1 class="hero-title">
+              Empowering Human Potential with <span>Precision Competency</span>
+            </h1>
+            <p class="hero-subtitle">
+              A centralized digital capacity building and learning management portal. Orchestrate organizational training, assess subject mastery through timed MCQs, map trainer competencies, and foster continuous knowledge sharing.
+            </p>
+            <div class="hero-actions">
+              <button class="btn btn-primary btn-lg" onclick="App.navigateTo('courses')">
+                <i data-lucide="compass"></i> Explore Learning Tracks
+              </button>
+              <button class="btn btn-outline btn-lg" style="color:#fff; border-color:rgba(255,255,255,0.3);" onclick="App.navigateTo('competency')">
+                <i data-lucide="git-merge"></i> Competency Mapping Matrix
+              </button>
+            </div>
+          </div>
+
+          <!-- Hero KPI Stat Cards -->
+          <div class="hero-stats-card">
+            <h3 style="color:#fff; margin-bottom:16px; font-size:1.15rem;">Organizational Impact</h3>
+            <div class="hero-stats-grid">
+              <div class="hero-stat-box">
+                <div class="hero-stat-number">98.4%</div>
+                <div class="hero-stat-label">Certification Pass Rate</div>
+              </div>
+              <div class="hero-stat-box">
+                <div class="hero-stat-number">45+</div>
+                <div class="hero-stat-label">Certified Master Trainers</div>
+              </div>
+              <div class="hero-stat-box">
+                <div class="hero-stat-number">1,250+</div>
+                <div class="hero-stat-label">Trainees Upskilled</div>
+              </div>
+              <div class="hero-stat-box">
+                <div class="hero-stat-number">6</div>
+                <div class="hero-stat-label">Strategic Competency Domains</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Newly Added Learning Content Section -->
+      <section style="padding: 64px 0 32px 0;">
+        <div class="container">
+          <div class="section-header">
+            <div>
+              <span class="badge badge-warning" style="margin-bottom:8px;">Curriculum Spotlight</span>
+              <h2 class="section-title">Newly Added Learning Content</h2>
+              <p class="section-subtitle">Executive masterclasses and technical modules curated by certified trainers</p>
+            </div>
+            <button class="btn btn-outline" onclick="App.navigateTo('courses')">
+              View All Courses <i data-lucide="arrow-right"></i>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-3 gap-lg" id="homepage-new-courses-grid">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Three Pillars of Capacity Connect -->
+      <section style="padding: 48px 0; background: var(--bg-surface-alt); border-top:1px solid var(--border-color); border-bottom:1px solid var(--border-color);">
+        <div class="container">
+          <div class="section-header text-center" style="max-width:680px; margin:0 auto 48px auto; display:block;">
+            <h2 class="section-title">Purpose-Built for Three Core Organizational Roles</h2>
+            <p class="section-subtitle">Collaborative synergy between Learners, Certifying Instructors, and Directorate Administrators</p>
+          </div>
+
+          <div class="grid grid-cols-3 gap-lg">
+            <!-- Trainee Card -->
+            <div class="card" style="border-top: 4px solid var(--role-trainee);">
+              <div style="width:48px; height:48px; border-radius:var(--radius-md); background:var(--role-trainee-bg); color:var(--role-trainee); display:flex; align-items:center; justify-content:center; margin-bottom:16px;">
+                <i data-lucide="user-check" style="width:28px; height:28px;"></i>
+              </div>
+              <span class="badge badge-trainee" style="margin-bottom:8px;">Role: Trainee</span>
+              <h3 style="margin-bottom:8px;">Trainee Experience</h3>
+              <p style="font-size:0.875rem; margin-bottom:16px;">
+                Build rich professional profiles with qualifications, work experience, and skills. Enroll in courses, access the Trainer Library, attempt timed MCQ benchmark tests, and download verifiable certificates.
+              </p>
+              <button class="btn btn-sm btn-outline" onclick="Auth.loginAsDemo('trainee')">Explore Trainee Portal</button>
+            </div>
+
+            <!-- Trainer Card -->
+            <div class="card" style="border-top: 4px solid var(--role-trainer);">
+              <div style="width:48px; height:48px; border-radius:var(--radius-md); background:var(--role-trainer-bg); color:var(--role-trainer); display:flex; align-items:center; justify-content:center; margin-bottom:16px;">
+                <i data-lucide="presentation" style="width:28px; height:28px;"></i>
+              </div>
+              <span class="badge badge-trainer" style="margin-bottom:8px;">Role: Trainer</span>
+              <h3 style="margin-bottom:8px;">Trainer Studio</h3>
+              <p style="font-size:0.875rem; margin-bottom:16px;">
+                Manage subject competencies, author interactive questionnaires with cut-off deadlines, monitor real-time trainee performance metrics, and upload lectures, slides, and study playbooks.
+              </p>
+              <button class="btn btn-sm btn-outline" onclick="Auth.loginAsDemo('trainer')">Explore Trainer Studio</button>
+            </div>
+
+            <!-- Admin Card -->
+            <div class="card" style="border-top: 4px solid var(--role-admin);">
+              <div style="width:48px; height:48px; border-radius:var(--radius-md); background:var(--role-admin-bg); color:var(--role-admin); display:flex; align-items:center; justify-content:center; margin-bottom:16px;">
+                <i data-lucide="shield-check" style="width:28px; height:28px;"></i>
+              </div>
+              <span class="badge badge-admin" style="margin-bottom:8px;">Role: Admin</span>
+              <h3 style="margin-bottom:8px;">Admin Center</h3>
+              <p style="font-size:0.875rem; margin-bottom:16px;">
+                Manage user approvals, reassign roles, monitor analytics charts (enrollments, certifications, assessment scores), publish announcements to the homepage, and run competency mapping.
+              </p>
+              <button class="btn btn-sm btn-outline" onclick="Auth.loginAsDemo('admin')">Explore Admin Center</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Spotlight Achievements Wall -->
+      <section style="padding: 64px 0;">
+        <div class="container">
+          <div class="section-header">
+            <div>
+              <span class="badge badge-warning" style="margin-bottom:8px;">Excellence Recognition</span>
+              <h2 class="section-title">Spotlight Achievements & Champions</h2>
+              <p class="section-subtitle">Celebrating top-performing trainees and organizational capacity milestones</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-lg" id="homepage-achievements-grid">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================================================================
+         VIEW 2: COURSE CATALOG VIEW
+         =================================================================== -->
+    <div class="app-view hidden" id="courses-view">
+      <div class="container" style="padding: 48px 16px;">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title">Enterprise Course Catalog</h2>
+            <p class="section-subtitle">Discover executive curriculum tracks, syllabi, and hands-on capacity building modules</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-lg" id="catalog-courses-grid">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================================
+         VIEW 3: COMPETENCY MAPPING MATRIX VIEW
+         =================================================================== -->
+    <div class="app-view hidden" id="competency-view">
+      <!-- Injected by CompetencyView -->
+    </div>
+
+    <!-- ===================================================================
+         VIEW 4: GLOBAL TRAINER LIBRARY VIEW
+         =================================================================== -->
+    <div class="app-view hidden" id="library-view">
+      <div class="container" style="padding: 48px 16px;">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title">Trainer Knowledge Sharing Library</h2>
+            <p class="section-subtitle">Browse recorded lectures, downloadable presentation decks, and standard operating playbooks</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-md" id="global-library-grid">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================================
+         VIEW 5: TRAINEE PORTAL VIEW
+         =================================================================== -->
+    <div class="app-view hidden dashboard-wrapper" id="trainee-portal-view">
+      <!-- Injected by TraineeView -->
+    </div>
+
+    <!-- ===================================================================
+         VIEW 6: TRAINER PORTAL VIEW
+         =================================================================== -->
+    <div class="app-view hidden dashboard-wrapper" id="trainer-portal-view">
+      <!-- Injected by TrainerView -->
+    </div>
+
+    <!-- ===================================================================
+         VIEW 7: ADMIN PORTAL VIEW
+         =================================================================== -->
+    <div class="app-view hidden dashboard-wrapper" id="admin-portal-view">
+      <!-- Injected by AdminView -->
+    </div>
+
+    <!-- ===================================================================
+         VIEW 8: ACTIVE TIMED MCQ ASSESSMENT VIEW
+         =================================================================== -->
+    <div class="app-view hidden" id="assessment-active-view" style="padding: 32px 0 64px 0;">
+      <!-- Injected by AssessmentView -->
+    </div>
+
+  </main>
+
+  <!-- ===================================================================
+       FOOTER
+       =================================================================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="brand-logo" style="margin-bottom: 12px; color:#fff;">
+            <div class="brand-icon-wrap">
+              <i data-lucide="layers" style="width:20px; height:20px;"></i>
+            </div>
+            <span style="font-weight:700; font-size:1.15rem; color:#fff;">CAPACITY CONNECT</span>
+          </div>
+          <p style="color:#94A3B8; font-size:0.85rem; max-width:320px; margin-bottom:16px;">
+            A Digital Capacity Building and Learning Management Portal empowering enterprise workforce readiness, competency development, and trainer-trainee collaboration.
+          </p>
+          <div style="font-size:0.775rem; color:#64748B;">
+            Compliant with ISO/IEC 27001 & Enterprise L&D Standards
+          </div>
+        </div>
+
+        <div>
+          <h4 style="color:#fff; font-size:0.95rem; margin-bottom:14px;">Portal Modules</h4>
+          <ul style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem;">
+            <li><a href="javascript:void(0)" onclick="Auth.loginAsDemo('trainee')" style="color:#CBD5E1;">Trainee Learning Hub</a></li>
+            <li><a href="javascript:void(0)" onclick="Auth.loginAsDemo('trainer')" style="color:#CBD5E1;">Trainer Assessment Studio</a></li>
+            <li><a href="javascript:void(0)" onclick="Auth.loginAsDemo('admin')" style="color:#CBD5E1;">Admin Control Center</a></li>
+            <li><a href="javascript:void(0)" onclick="App.navigateTo('competency')" style="color:#CBD5E1;">Competency Matrix</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style="color:#fff; font-size:0.95rem; margin-bottom:14px;">Competency Domains</h4>
+          <ul style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem;">
+            <li><a href="javascript:void(0)" onclick="App.navigateTo('courses')" style="color:#CBD5E1;">Cloud Architecture</a></li>
+            <li><a href="javascript:void(0)" onclick="App.navigateTo('courses')" style="color:#CBD5E1;">Artificial Intelligence</a></li>
+            <li><a href="javascript:void(0)" onclick="App.navigateTo('courses')" style="color:#CBD5E1;">Cyber Defense & Zero Trust</a></li>
+            <li><a href="javascript:void(0)" onclick="App.navigateTo('courses')" style="color:#CBD5E1;">Agile Leadership</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style="color:#fff; font-size:0.95rem; margin-bottom:14px;">Demo Utilities</h4>
+          <p style="font-size:0.8rem; color:#94A3B8; margin-bottom:12px;">Reset state or switch test accounts easily during prototype review.</p>
+          <button class="btn btn-sm btn-outline" id="btn-reset-data" style="color:#fff; border-color:rgba(255,255,255,0.2);">
+            <i data-lucide="rotate-ccw"></i> Reset Demo Data
+          </button>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; 2026 CAPACITY CONNECT. All rights reserved. Centralized Web-Based Portal.</div>
+        <div style="display:flex; gap:16px;">
+          <a href="javascript:void(0)" style="color:#94A3B8;">Privacy Policy</a>
+          <a href="javascript:void(0)" style="color:#94A3B8;">Competency Standards</a>
+          <a href="javascript:void(0)" style="color:#94A3B8;">Security Compliance</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================================================================
+       MODALS REPOSITORY
+       =================================================================== -->
+
+  <!-- Modal 1: Sign In -->
+  <div class="modal-overlay" id="modal-login">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Sign In to Capacity Connect</h3>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <!-- Quick 1-Click Demo Buttons -->
+        <div style="background:var(--bg-surface-alt); padding:12px; border-radius:var(--radius-sm); margin-bottom:16px; border:1px solid var(--border-color);">
+          <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase;">Quick 1-Click Demo Sign In</div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-sm btn-outline w-full" data-demo-login="trainee">Trainee</button>
+            <button class="btn btn-sm btn-outline w-full" data-demo-login="trainer">Trainer</button>
+            <button class="btn btn-sm btn-outline w-full" data-demo-login="admin">Admin</button>
+          </div>
+        </div>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-input" id="login-email" value="priya.sharma@capacityconnect.org" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-input" id="login-password" value="password123" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-full" style="margin-top:8px;">Sign In</button>
+        </form>
+      </div>
+      <div class="modal-footer" style="justify-content:center;">
+        <span style="font-size:0.85rem; color:var(--text-secondary);">
+          Don't have an account? <a href="javascript:void(0)" onclick="App.closeAllModals(); App.openRegisterModal();">Register here</a>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Sign Up / Register -->
+  <div class="modal-overlay" id="modal-register">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">Create Capacity Connect Account</h3>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="register-form">
+          <div class="grid grid-cols-2 gap-md">
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" class="form-input" id="reg-name" placeholder="e.g. Maya Lin" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Organizational Email</label>
+              <input type="email" class="form-input" id="reg-email" placeholder="e.g. maya.lin@org.com" required>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-md">
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <input type="password" class="form-input" id="reg-password" value="password123" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Desired Portal Role</label>
+              <select class="form-select" id="reg-role">
+                <option value="trainee">Trainee (Immediate Activation)</option>
+                <option value="trainer">Trainer (Requires Admin Approval)</option>
+                <option value="admin">Admin (Requires Admin Approval)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-md">
+            <div class="form-group">
+              <label class="form-label">Department / Division</label>
+              <input type="text" class="form-input" id="reg-dept" placeholder="e.g. Enterprise Engineering">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Professional Title</label>
+              <input type="text" class="form-input" id="reg-title" placeholder="e.g. Senior Software Architect">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Short Professional Bio</label>
+            <textarea class="form-textarea" id="reg-bio" placeholder="Describe your background and capacity building objectives..."></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full">Complete Registration</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Trainee Add Qualification -->
+  <div class="modal-overlay" id="modal-add-qual">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Add Academic or Professional Qualification</h3>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-add-qual">
+          <div class="form-group">
+            <label class="form-label">Degree or Certification Name</label>
+            <input type="text" class="form-input" id="qual-degree" placeholder="e.g. M.S. in Computer Science" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Institution / University</label>
+            <input type="text" class="form-input" id="qual-institution" placeholder="e.g. Stanford University" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Graduation Year</label>
+            <input type="text" class="form-input" id="qual-year" placeholder="e.g. 2023" required>
+          </div>
+          <div class="modal-footer" style="padding:16px 0 0 0; background:none; border:none;">
+            <button type="button" class="btn btn-outline" data-close-modal>Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Qualification</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Trainee Add Experience -->
+  <div class="modal-overlay" id="modal-add-exp">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Add Work Experience</h3>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-add-exp">
+          <div class="form-group">
+            <label class="form-label">Job Role / Designation</label>
+            <input type="text" class="form-input" id="exp-role" placeholder="e.g. Cloud Infrastructure Lead" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Organization / Company</label>
+            <input type="text" class="form-input" id="exp-org" placeholder="e.g. Acme Global Tech" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Duration / Period</label>
+            <input type="text" class="form-input" id="exp-period" placeholder="e.g. 2022 - Present" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Key Responsibilities</label>
+            <textarea class="form-textarea" id="exp-desc" placeholder="Summary of duties and accomplishments..."></textarea>
+          </div>
+          <div class="modal-footer" style="padding:16px 0 0 0; background:none; border:none;">
+            <button type="button" class="btn btn-outline" data-close-modal>Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Experience</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: Trainee Add Skill -->
+  <div class="modal-overlay" id="modal-add-skill">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Add Competency / Skill</h3>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-add-skill">
+          <div class="form-group">
+            <label class="form-label">Skill Name</label>
+            <input type="text" class="form-input" id="skill-name" placeholder="e.g. Kubernetes Cluster Security" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Proficiency Level</label>
+            <select class="form-select" id="skill-level">
+              <option value="Beginner">Beginner (Foundational)</option>
+              <option value="Intermediate">Intermediate (Working)</option>
+              <option value="Advanced">Advanced (Proficient)</option>
+              <option value="Expert">Expert (Subject Matter Specialist)</option>
+            </select>
+          </div>
+          <div class="modal-footer" style="padding:16px 0 0 0; background:none; border:none;">
+            <button type="button" class="btn btn-outline" data-close-modal>Cancel</button>
+            <button type="submit" class="btn btn-primary">Add Skill</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 6: Trainer Upload Resource -->
+  <div class="modal-overlay" id="modal-upload-resource">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">Upload to Trainer Library</h3>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-upload-resource">
+          <div class="grid grid-cols-2 gap-md">
+            <div class="form-group">
+              <label class="form-label">Resource Type</label>
+              <select class="form-select" id="res-type">
+                <option value="video">Recorded Lecture (Video)</option>
+                <option value="presentation">Presentation Deck (PPT / Slides)</option>
+                <option value="document">Study Material / Guide (PDF)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Subject / Domain</label>
+              <select class="form-select" id="res-subject">
+                <option value="Cloud Architecture">Cloud Architecture</option>
+                <option value="Artificial Intelligence">Artificial Intelligence</option>
+                <option value="Cybersecurity">Cybersecurity</option>
+                <option value="Agile Leadership">Agile Leadership</option>
+                <option value="Data Governance">Data Governance</option>
+                <option value="DevSecOps">DevSecOps</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Title of Resource</label>
+            <input type="text" class="form-input" id="res-title" placeholder="e.g. Masterclass on Microservices Fault Tolerance" required>
+          </div>
+
+          <div class="grid grid-cols-2 gap-md">
+            <div class="form-group">
+              <label class="form-label">Duration (for Video in mins)</label>
+              <input type="number" class="form-input" id="res-duration" placeholder="e.g. 45">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Slide Count (for Presentation)</label>
+              <input type="number" class="form-input" id="res-slides" placeholder="e.g. 35">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Executive Summary & Instructions</label>
+            <textarea class="form-textarea" id="res-desc" placeholder="Summary of topics covered and guidance for trainees..."></textarea>
+          </div>
+
+          <div class="modal-footer" style="padding:16px 0 0 0; background:none; border:none;">
+            <button type="button" class="btn btn-outline" data-close-modal>Cancel</button>
+            <button type="submit" class="btn btn-primary"><i data-lucide="upload-cloud"></i> Upload to Library</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 7: Trainer Create Questionnaire -->
+  <div class="modal-overlay" id="modal-create-assessment">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">Author Assessment Questionnaire</h3>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-create-assessment">
+          <div class="grid grid-cols-2 gap-md">
+            <div class="form-group">
+              <label class="form-label">Subject Domain</label>
+              <select class="form-select" id="asm-subject">
+                <option value="Cloud Architecture">Cloud Architecture</option>
+                <option value="Artificial Intelligence">Artificial Intelligence</option>
+                <option value="Cybersecurity">Cybersecurity</option>
+                <option value="Agile Leadership">Agile Leadership</option>
+                <option value="Data Governance">Data Governance</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Questionnaire Title</label>
+              <input type="text" class="form-input" id="asm-title" placeholder="e.g. Cloud Resilience & Ingress Quiz" required>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-md">
+            <div class="form-group">
+              <label class="form-label">Time Limit (Mins)</label>
+              <input type="number" class="form-input" id="asm-time-limit" value="15" min="5" max="60" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Passing Score (%)</label>
+              <input type="number" class="form-input" id="asm-pass-score" value="70" min="50" max="100" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Submission Deadline</label>
+              <input type="date" class="form-input" id="asm-deadline" value="2026-11-30" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Assessment Description</label>
+            <textarea class="form-textarea" id="asm-desc" placeholder="Scope of the examination and guidelines for trainees..."></textarea>
+          </div>
+
+          <div style="background:var(--bg-surface-alt); padding:16px; border-radius:var(--radius-md); margin-bottom:16px; border:1px solid var(--border-color);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h5 style="margin:0;"><i data-lucide="help-circle" style="width:16px; height:16px; display:inline;"></i> Questionnaire Examination Items</h5>
+              <button type="button" class="btn btn-sm btn-outline" id="btn-add-builder-q">
+                <i data-lucide="plus"></i> Add Question
+              </button>
+            </div>
+            <div id="asm-questions-builder-container" style="display:flex; flex-direction:column; gap:12px;">
+              <!-- Dynamic question cards injected here -->
+            </div>
+          </div>
+
+          <div class="modal-footer" style="padding:16px 0 0 0; background:none; border:none;">
+            <button type="button" class="btn btn-outline" data-close-modal>Cancel</button>
+            <button type="submit" class="btn btn-primary"><i data-lucide="check"></i> Publish Questionnaire</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 8: Admin Publish Announcement -->
+  <div class="modal-overlay" id="modal-create-announcement">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Publish Homepage Announcement</h3>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-create-announcement">
+          <div class="form-group">
+            <label class="form-label">Announcement Title</label>
+            <input type="text" class="form-input" id="ann-title" placeholder="e.g. Enterprise AI Bootcamp Open" required>
+          </div>
+          <div class="grid grid-cols-2 gap-md">
+            <div class="form-group">
+              <label class="form-label">Broadcast Type</label>
+              <select class="form-select" id="ann-type">
+                <option value="URGENT">URGENT Alert</option>
+                <option value="NEW_CONTENT">New Learning Content</option>
+                <option value="EVENT">Event / Townhall</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Target Audience</label>
+              <select class="form-select" id="ann-target">
+                <option value="All Staff">All Staff</option>
+                <option value="Trainees">Trainees Only</option>
+                <option value="Trainers">Trainers Only</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notification Message</label>
+            <textarea class="form-textarea" id="ann-content" placeholder="Broadcast details..." required></textarea>
+          </div>
+          <div class="modal-footer" style="padding:16px 0 0 0; background:none; border:none;">
+            <button type="button" class="btn btn-outline" data-close-modal>Cancel</button>
+            <button type="submit" class="btn btn-primary">Broadcast to Homepage</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 9: Admin Create Achievement -->
+  <div class="modal-overlay" id="modal-create-achievement">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Nominate Spotlight Achievement</h3>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-create-achievement">
+          <div class="form-group">
+            <label class="form-label">Recipient Trainee Name</label>
+            <input type="text" class="form-input" id="ach-name" placeholder="e.g. Jordan Smith" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Department</label>
+            <input type="text" class="form-input" id="ach-dept" placeholder="e.g. Cyber Threat Defense" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Award Title</label>
+            <input type="text" class="form-input" id="ach-title" placeholder="e.g. Master of Cloud Architecture" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Score / Distinction</label>
+            <input type="text" class="form-input" id="ach-score" placeholder="e.g. 96% Benchmark Score">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Trainee Testimonial / Impact Statement</label>
+            <textarea class="form-textarea" id="ach-quote" placeholder="How this capacity training helped the organization..." required></textarea>
+          </div>
+          <div class="modal-footer" style="padding:16px 0 0 0; background:none; border:none;">
+            <button type="button" class="btn btn-outline" data-close-modal>Cancel</button>
+            <button type="submit" class="btn btn-primary">Publish to Spotlight Wall</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 10: Trainee Feedback on Course -->
+  <div class="modal-overlay" id="modal-feedback">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Course & Content Feedback</h3>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-course-feedback">
+          <input type="hidden" id="feedback-course-id">
+          <p style="margin-bottom:16px; font-weight:600; color:var(--brand-accent);" id="feedback-course-name">
+            Enterprise Cloud Architecture
+          </p>
+
+          <div class="form-group">
+            <label class="form-label">Overall Rating (1 to 5 Stars)</label>
+            <select class="form-select" id="feedback-rating-val">
+              <option value="5">★★★★★ 5 Stars (Exceptional)</option>
+              <option value="4">★★★★☆ 4 Stars (Very Good)</option>
+              <option value="3">★★★☆☆ 3 Stars (Satisfactory)</option>
+              <option value="2">★★☆☆☆ 2 Stars (Needs Improvement)</option>
+              <option value="1">★☆☆☆☆ 1 Star (Unsatisfactory)</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-3 gap-sm">
+            <div class="form-group">
+              <label class="form-label" style="font-size:0.75rem;">Instructor Clarity</label>
+              <select class="form-select" id="feedback-clarity">
+                <option value="5">5 / 5</option>
+                <option value="4">4 / 5</option>
+                <option value="3">3 / 5</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size:0.75rem;">Course Depth</label>
+              <select class="form-select" id="feedback-depth">
+                <option value="5">5 / 5</option>
+                <option value="4">4 / 5</option>
+                <option value="3">3 / 5</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size:0.75rem;">Practical Utility</label>
+              <select class="form-select" id="feedback-practical">
+                <option value="5">5 / 5</option>
+                <option value="4">4 / 5</option>
+                <option value="3">3 / 5</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Written Review & Feedback</label>
+            <textarea class="form-textarea" id="feedback-comment" placeholder="Share your experience with the learning materials, trainer pedagogy, and assessments..." required></textarea>
+          </div>
+
+          <div class="modal-footer" style="padding:16px 0 0 0; background:none; border:none;">
+            <button type="button" class="btn btn-outline" data-close-modal>Cancel</button>
+            <button type="submit" class="btn btn-primary">Submit Feedback</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 11: Resource Viewer (Lecture Player / Slides / Document) -->
+  <div class="modal-overlay" id="modal-resource-viewer">
+    <div class="modal-content modal-xl">
+      <div class="modal-header">
+        <h3 class="modal-title" id="resource-viewer-title">Resource Viewer</h3>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" id="resource-viewer-body">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 12: Course Detail & Syllabus -->
+  <div class="modal-overlay" id="modal-course-detail">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">Course Details & Syllabus</h3>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" id="course-detail-body">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 13: Verifiable Certificate View -->
+  <div class="modal-overlay" id="modal-certificate">
+    <div class="modal-content modal-xl">
+      <div class="modal-header">
+        <h3 class="modal-title">Official Competency Credential</h3>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" id="certificate-render-container">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 14: Course Learning Classroom & Module Player -->
+  <div class="modal-overlay" id="modal-course-player">
+    <div class="modal-content modal-xl">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span class="badge badge-primary" id="player-course-subject">Cloud Architecture</span>
+          <h3 class="modal-title" id="player-course-title" style="margin:0;">Course Classroom</h3>
+        </div>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" id="player-classroom-body" style="padding:var(--space-lg);">
+        <!-- Injected dynamically by TraineeView.renderCoursePlayer -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 15: Trainer Questionnaire Reviewer -->
+  <div class="modal-overlay" id="modal-view-questionnaire">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <div>
+          <span class="badge badge-primary" id="view-q-subject">Subject</span>
+          <h3 class="modal-title" id="view-q-title" style="margin-top:4px;">Questionnaire Examination Key</h3>
+        </div>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" id="view-q-body">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 16: Trainee Attempt Result Drill-down -->
+  <div class="modal-overlay" id="modal-attempt-detail">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">Trainee Examination Record</h3>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" id="attempt-detail-body">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 17: Official Credential Authenticity Verification Engine -->
+  <div class="modal-overlay" id="modal-verify-credential">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:36px; height:36px; border-radius:50%; background:var(--color-success-bg); color:var(--color-success); display:flex; align-items:center; justify-content:center;">
+            <i data-lucide="shield-check" style="width:20px; height:20px;"></i>
+          </div>
+          <div>
+            <h3 class="modal-title" style="margin:0;">Credential Verification Engine</h3>
+            <span style="font-size:0.75rem; color:var(--text-muted);">Public Authenticity Registry</span>
+          </div>
+        </div>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="background:var(--bg-surface-alt); padding:16px; border-radius:var(--radius-md); margin-bottom:20px; border:1px solid var(--border-color);">
+          <label class="form-label" style="font-weight:700;">Enter Certificate or Credential ID</label>
+          <div style="display:flex; gap:10px;">
+            <input type="text" class="form-input" id="verify-cert-input" placeholder="e.g. CAP-2026-CLOUD-9841" value="CAP-2026-CLOUD-9841" style="font-family:var(--font-mono); font-weight:600;">
+            <button class="btn btn-primary" id="btn-run-cert-verify" style="flex-shrink:0;">
+              <i data-lucide="search"></i> Verify Credential
+            </button>
+          </div>
+          <div style="font-size:0.775rem; color:var(--text-muted); margin-top:8px; display:flex; gap:8px; align-items:center;">
+            <span>Try sample credentials:</span>
+            <button type="button" class="btn btn-xs btn-outline" onclick="document.getElementById('verify-cert-input').value='CAP-2026-CLOUD-9841'; document.getElementById('btn-run-cert-verify').click();">Priya Sharma (Cloud)</button>
+            <button type="button" class="btn btn-xs btn-outline" onclick="document.getElementById('verify-cert-input').value='CAP-2026-AI-5521'; document.getElementById('btn-run-cert-verify').click();">Elena Vance (AI)</button>
+          </div>
+        </div>
+
+        <div id="verify-results-container">
+          <!-- Dynamic verification result card -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 18: Admin Add Strategic Competency Domain -->
+  <div class="modal-overlay" id="modal-add-competency-domain">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">Register Strategic Competency Domain</h3>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-add-competency-domain">
+          <div class="grid grid-cols-2 gap-md">
+            <div class="form-group">
+              <label class="form-label">Subject / Strategic Domain</label>
+              <input type="text" class="form-input" id="dom-subject" placeholder="e.g. Quantum Computing & Cryptography" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Domain Category</label>
+              <select class="form-select" id="dom-category">
+                <option value="Advanced Infrastructure">Advanced Infrastructure</option>
+                <option value="Applied Intelligence">Applied Intelligence</option>
+                <option value="Information Security">Information Security</option>
+                <option value="Agile Leadership">Agile Leadership</option>
+                <option value="Data & Analytics">Data & Analytics</option>
+                <option value="Regulatory Compliance">Regulatory Compliance</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-md">
+            <div class="form-group">
+              <label class="form-label">Required Competency</label>
+              <select class="form-select" id="dom-skill-level">
+                <option value="Level 3 (Intermediate)">Level 3 (Intermediate)</option>
+                <option value="Level 4 (Advanced)" selected>Level 4 (Advanced)</option>
+                <option value="Level 5 (Master)">Level 5 (Master / Principal)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Enterprise Demand</label>
+              <select class="form-select" id="dom-demand">
+                <option value="Critical">Critical</option>
+                <option value="High" selected>High</option>
+                <option value="Medium">Medium</option>
+                <option value="Moderate">Moderate</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Initial Trainee Target</label>
+              <input type="number" class="form-input" id="dom-target" value="45" min="5" required>
+            </div>
+          </div>
+
+          <div class="modal-footer" style="padding:16px 0 0 0; background:none; border:none;">
+            <button type="button" class="btn btn-outline" data-close-modal>Cancel</button>
+            <button type="submit" class="btn btn-primary"><i data-lucide="check"></i> Register Competency Domain</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 19: Global Instant Quick Search -->
+  <div class="modal-overlay" id="modal-global-search">
+    <div class="modal-content search-modal-box">
+      <div class="search-input-wrap">
+        <i data-lucide="search" style="color:var(--text-muted); width:20px; height:20px;"></i>
+        <input type="text" id="global-search-input" placeholder="Search courses, library assets, trainers, competencies... (ESC to close)" autocomplete="off">
+        <button class="btn btn-icon btn-ghost btn-sm" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="search-results-container" id="global-search-results">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 20: Admin Direct User Onboarding -->
+  <div class="modal-overlay" id="modal-admin-create-user">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">Direct User Onboarding</h3>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-admin-create-user">
+          <div class="grid grid-cols-2 gap-md">
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" class="form-input" id="adm-user-name" placeholder="e.g. Sarah Jenkins" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input type="email" class="form-input" id="adm-user-email" placeholder="e.g. sarah.j@capacityconnect.org" required>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-md">
+            <div class="form-group">
+              <label class="form-label">Portal Role</label>
+              <select class="form-select" id="adm-user-role">
+                <option value="trainee">Trainee</option>
+                <option value="trainer">Trainer</option>
+                <option value="admin">Administrator</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Department</label>
+              <input type="text" class="form-input" id="adm-user-dept" placeholder="e.g. Enterprise Engineering" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Professional Title</label>
+              <input type="text" class="form-input" id="adm-user-title" placeholder="e.g. Senior Security Architect" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Professional Background & Bio</label>
+            <textarea class="form-textarea" id="adm-user-bio" placeholder="Profile overview..."></textarea>
+          </div>
+
+          <div class="modal-footer" style="padding:16px 0 0 0; background:none; border:none;">
+            <button type="button" class="btn btn-outline" data-close-modal>Cancel</button>
+            <button type="submit" class="btn btn-primary"><i data-lucide="user-plus"></i> Create & Activate Account</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 21: Admin/Trainer Course Authoring -->
+  <div class="modal-overlay" id="modal-create-course">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">Publish New Course Track</h3>
+        <button class="btn btn-icon btn-ghost" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-create-course">
+          <div class="grid grid-cols-2 gap-md">
+            <div class="form-group">
+              <label class="form-label">Course Title</label>
+              <input type="text" class="form-input" id="new-course-title" placeholder="e.g. Zero-Trust Security Engineering" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Subject Domain</label>
+              <select class="form-select" id="new-course-subject">
+                <option value="Cloud Architecture">Cloud Architecture</option>
+                <option value="Artificial Intelligence">Artificial Intelligence</option>
+                <option value="Cybersecurity">Cybersecurity</option>
+                <option value="Agile Leadership">Agile Leadership</option>
+                <option value="Data Governance">Data Governance</option>
+                <option value="DevSecOps">DevSecOps</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-md">
+            <div class="form-group">
+              <label class="form-label">Duration</label>
+              <input type="text" class="form-input" id="new-course-duration" placeholder="e.g. 10 Weeks" value="8 Weeks" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Skill Level</label>
+              <select class="form-select" id="new-course-level">
+                <option value="Foundational">Foundational</option>
+                <option value="Intermediate" selected>Intermediate</option>
+                <option value="Advanced">Advanced</option>
+                <option value="Executive Mastery">Executive Mastery</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Curriculum Spotlight</label>
+              <select class="form-select" id="new-course-featured">
+                <option value="yes">Feature on Homepage</option>
+                <option value="no" selected>Standard Catalog</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Executive Course Description</label>
+            <textarea class="form-textarea" id="new-course-desc" placeholder="Scope, methodologies, and learning outcomes..." required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Prerequisites</label>
+            <input type="text" class="form-input" id="new-course-prereq" placeholder="e.g. Basic networking and cloud knowledge">
+          </div>
+
+          <div class="modal-footer" style="padding:16px 0 0 0; background:none; border:none;">
+            <button type="button" class="btn btn-outline" data-close-modal>Cancel</button>
+            <button type="submit" class="btn btn-primary"><i data-lucide="book-plus"></i> Publish Course Track</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications Container -->
+  <div id="toast-container"></div>
+
+  <!-- Application Scripts -->
+  <script src="js/mockData.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/traineeView.js"></script>
+  <script src="js/trainerView.js"></script>
+  <script src="js/adminView.js"></script>
+  <script src="js/competencyView.js"></script>
+  <script src="js/assessmentView.js"></script>
+  <script src="js/certificateView.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
