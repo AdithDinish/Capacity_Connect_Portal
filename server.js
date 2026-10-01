@@ -51,8 +51,72 @@ const MIME_TYPES = {
 
 const server = http.createServer((req, res) => {
   // Normalize URL
-  let parsedUrl = new URL(req.url, `http://${req.headers.host}`);
+  let parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost:' + PORT}`);
   let pathname = parsedUrl.pathname;
+
+  // Supabase Proxy endpoint to completely eliminate browser CORS, adblocker, and Brave Shields network blocks
+  if (pathname.startsWith('/supabase-proxy/')) {
+    const targetBase = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+    if (!targetBase) {
+      res.writeHead(503, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ error: 'SUPABASE_URL not configured in server .env' }));
+      return;
+    }
+
+    // Handle CORS preflight
+    if (req.method === 'OPTIONS') {
+      res.writeHead(200, {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': '*',
+        'Access-Control-Max-Age': '86400'
+      });
+      res.end();
+      return;
+    }
+
+    const subPath = pathname.slice('/supabase-proxy'.length);
+    const targetUrl = targetBase + subPath + (parsedUrl.search || '');
+
+    const chunks = [];
+    req.on('data', chunk => chunks.push(chunk));
+    req.on('end', async () => {
+      try {
+        const bodyBuffer = chunks.length > 0 ? Buffer.concat(chunks) : null;
+        const forwardHeaders = { ...req.headers };
+        delete forwardHeaders.host;
+        delete forwardHeaders.connection;
+        delete forwardHeaders['content-length'];
+
+        const fetchOptions = {
+          method: req.method,
+          headers: forwardHeaders
+        };
+
+        if (bodyBuffer && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+          fetchOptions.body = bodyBuffer;
+        }
+
+        const upstreamRes = await fetch(targetUrl, fetchOptions);
+        const upstreamBody = await upstreamRes.arrayBuffer();
+
+        const responseHeaders = {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': '*',
+          'Content-Type': upstreamRes.headers.get('content-type') || 'application/json'
+        };
+
+        res.writeHead(upstreamRes.status, responseHeaders);
+        res.end(Buffer.from(upstreamBody));
+      } catch (proxyErr) {
+        console.error('Supabase proxy error:', proxyErr.message);
+        res.writeHead(502, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ error: 'Supabase proxy request failed: ' + proxyErr.message }));
+      }
+    });
+    return;
+  }
 
   // API Config endpoint
   if (pathname === '/api/config') {
@@ -63,7 +127,8 @@ const server = http.createServer((req, res) => {
     });
     res.end(JSON.stringify({
       supabaseUrl: process.env.SUPABASE_URL || '',
-      supabaseAnonKey: process.env.SUPABASE_ANON_KEY || ''
+      supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
+      proxyUrl: `http://localhost:${PORT}/supabase-proxy`
     }));
     return;
   }
@@ -108,6 +173,7 @@ const server = http.createServer((req, res) => {
   <script>
     window.ENV_SUPABASE_URL = ${JSON.stringify(process.env.SUPABASE_URL || '')};
     window.ENV_SUPABASE_ANON_KEY = ${JSON.stringify(process.env.SUPABASE_ANON_KEY || '')};
+    window.ENV_SUPABASE_PROXY_URL = ${JSON.stringify(`http://localhost:${PORT}/supabase-proxy`)};
   </script>`;
           finalContent = htmlStr.replace('</head>', `${envScript}\n</head>`);
         }
@@ -128,5 +194,6 @@ server.listen(PORT, () => {
   console.log(`  CAPACITY CONNECT Portal Running Successfully!`);
   console.log(`  Access URL: http://localhost:${PORT}`);
   console.log(`  Supabase: ${process.env.SUPABASE_URL ? 'Configured in .env' : 'Awaiting credentials in .env'}`);
+  console.log(`  Supabase Proxy: http://localhost:${PORT}/supabase-proxy`);
   console.log(`======================================================\n`);
 });

@@ -1,8 +1,8 @@
 /**
  * CAPACITY CONNECT - SUPABASE AUTH & DATABASE INTEGRATION
  * Official Supabase Client setup, reactive authentication listeners,
- * role-based profile synchronization with trainee_profiles and trainer_profiles,
- * dynamic database querying, and graceful demo/mock fallback.
+ * automatic CORS/Brave Shield fallback proxy, role-based profile synchronization
+ * with trainee_profiles and trainer_profiles, and graceful demo/mock fallback.
  */
 
 const SupabaseConfig = {
@@ -13,9 +13,11 @@ const SupabaseConfig = {
   // Default / environment credentials (injected from .env by server.js)
   defaultUrl: window.ENV_SUPABASE_URL || '',
   defaultAnonKey: window.ENV_SUPABASE_ANON_KEY || '',
+  proxyUrl: window.ENV_SUPABASE_PROXY_URL || (window.location.origin ? window.location.origin + '/supabase-proxy' : ''),
 
   client: null,
   isInitialized: false,
+  activeEndpointUrl: '',
 
   normalizeUrl(rawUrl) {
     if (!rawUrl) return '';
@@ -35,6 +37,7 @@ const SupabaseConfig = {
 
     if (url && key && window.supabase && typeof window.supabase.createClient === 'function') {
       try {
+        this.activeEndpointUrl = url;
         this.client = window.supabase.createClient(url, key, {
           auth: {
             persistSession: true,
@@ -47,13 +50,37 @@ const SupabaseConfig = {
         this.setupAuthListener();
         this.checkExistingSession();
       } catch (err) {
-        console.warn("⚠️ Failed to initialize Supabase client:", err);
-        this.client = null;
-        this.isInitialized = false;
+        console.warn("⚠️ Failed to initialize Supabase client directly:", err);
+        // Fallback to proxy
+        this.initProxyClient(key);
       }
     } else {
       this.client = null;
       this.isInitialized = false;
+    }
+  },
+
+  initProxyClient(key) {
+    const pUrl = this.proxyUrl || (window.location.origin + '/supabase-proxy');
+    if (window.supabase && typeof window.supabase.createClient === 'function' && key) {
+      try {
+        this.activeEndpointUrl = pUrl;
+        this.client = window.supabase.createClient(pUrl, key, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+          }
+        });
+        this.isInitialized = true;
+        console.log("⚡ Supabase Client initialized via Same-Origin Proxy:", pUrl);
+        this.setupAuthListener();
+        this.checkExistingSession();
+      } catch (err) {
+        console.warn("⚠️ Failed to initialize Supabase client via proxy:", err);
+        this.client = null;
+        this.isInitialized = false;
+      }
     }
   },
 
@@ -94,6 +121,7 @@ const SupabaseConfig = {
       return { success: false, message: "Supabase JS SDK library not loaded." };
     }
 
+    // Try direct connection first
     try {
       const testClient = window.supabase.createClient(url, key);
       const { data, error } = await testClient.auth.getSession();
@@ -102,6 +130,18 @@ const SupabaseConfig = {
       }
       return { success: true, message: "Connection verified! Supabase project is active, online, and reachable." };
     } catch (err) {
+      // If direct fetch fails (e.g. browser adblock or Brave Shields), test via local proxy
+      const pUrl = this.proxyUrl || (window.location.origin + '/supabase-proxy');
+      try {
+        const proxyClient = window.supabase.createClient(pUrl, key);
+        const { data, error } = await proxyClient.auth.getSession();
+        if (!error || (error && error.status < 500)) {
+          this.initProxyClient(key);
+          return { success: true, message: "Connection verified via Localhost Proxy! (Bypassed browser shield restrictions)" };
+        }
+      } catch (proxyErr) {
+        console.warn("Proxy test failed:", proxyErr);
+      }
       return {
         success: false,
         message: "Failed to connect to Supabase: " + (err.message || "Invalid URL or unreachable host. Ensure project is not paused.")
@@ -268,17 +308,31 @@ const SupabaseConfig = {
   async signIn(email, password, expectedRole = null) {
     if (this.isConfigured()) {
       try {
-        const { data, error } = await this.client.auth.signInWithPassword({
+        let authResult = await this.client.auth.signInWithPassword({
           email: email.trim(),
           password: password.trim()
         });
+
+        // If direct request failed with network error, try via proxy client
+        if (authResult.error && (authResult.error.message.includes('Failed to fetch') || authResult.error.status === 0)) {
+          const creds = this.getCredentials();
+          this.initProxyClient(creds.anonKey);
+          if (this.client) {
+            authResult = await this.client.auth.signInWithPassword({
+              email: email.trim(),
+              password: password.trim()
+            });
+          }
+        }
+
+        const { data, error } = authResult;
 
         if (error) {
           let msg = error.message;
           const code = error.code || '';
 
           if (code === 'email_not_confirmed' || msg.includes('Email not confirmed')) {
-            msg = "Email not confirmed. Please check your inbox for the Supabase confirmation link, or disable 'Confirm email' under Supabase Dashboard -> Authentication -> Providers -> Email for instant sign-in.";
+            msg = "Email not confirmed. Please check your inbox for the confirmation link, or disable 'Confirm email' in Supabase Auth Dashboard -> Providers -> Email for instant sign-in.";
           } else if (code === 'invalid_credentials' || msg.includes('Invalid login credentials')) {
             msg = "Invalid email or password. Please verify your credentials or register a new account.";
           } else if (code === 'over_email_send_rate_limit' || msg.includes('rate limit')) {
@@ -296,6 +350,24 @@ const SupabaseConfig = {
         }
       } catch (err) {
         console.error("Supabase sign in failed:", err);
+        // Automatic retry via proxy on network fetch error
+        try {
+          const creds = this.getCredentials();
+          this.initProxyClient(creds.anonKey);
+          if (this.client) {
+            const retryRes = await this.client.auth.signInWithPassword({
+              email: email.trim(),
+              password: password.trim()
+            });
+            if (retryRes.data && retryRes.data.user) {
+              const user = await this.syncSupabaseUserToStore(retryRes.data.user);
+              return { success: true, user: user, session: retryRes.data.session, viaSupabase: true };
+            }
+          }
+        } catch (retryErr) {
+          console.warn("Proxy sign in retry also failed:", retryErr);
+        }
+
         const errMsg = err.message === 'Failed to fetch'
           ? 'Cannot reach Supabase API ("Failed to fetch"). Check project URL in .env, verify internet connection, or confirm Supabase project is active.'
           : (err.message || "Authentication error");
@@ -333,13 +405,30 @@ const SupabaseConfig = {
 
     if (this.isConfigured()) {
       try {
-        const { data, error } = await this.client.auth.signUp({
+        let authResult = await this.client.auth.signUp({
           email: email.trim(),
           password: password.trim(),
           options: {
             data: metadata
           }
         });
+
+        // If direct request failed with network error, try via proxy client
+        if (authResult.error && (authResult.error.message.includes('Failed to fetch') || authResult.error.status === 0)) {
+          const creds = this.getCredentials();
+          this.initProxyClient(creds.anonKey);
+          if (this.client) {
+            authResult = await this.client.auth.signUp({
+              email: email.trim(),
+              password: password.trim(),
+              options: {
+                data: metadata
+              }
+            });
+          }
+        }
+
+        const { data, error } = authResult;
 
         if (error) {
           let msg = error.message;
@@ -375,7 +464,7 @@ const SupabaseConfig = {
               await this.client.from('trainee_profiles').upsert({
                 id: data.user.id,
                 qualification: profileData.qualification || profileData.title || '',
-                work_experience: profileData.work_experience || profileData.experience || 'Entry-Level Professional',
+                work_experience: profileData.work_experience || profileData.experience || 'Enterprise Trainee',
                 interests: profileData.interests || ['Cloud Architecture', 'Digital Transformation'],
                 skills: profileData.skills || ['Agile Leadership', 'Digital Capacity'],
                 certificates: [],
@@ -394,7 +483,7 @@ const SupabaseConfig = {
               });
             }
           } catch (dbErr) {
-            console.warn("Notice: Direct database table write on signup returned:", dbErr.message);
+            console.warn("Notice: Post-signup database table write returned:", dbErr.message);
           }
 
           return {
@@ -410,8 +499,37 @@ const SupabaseConfig = {
         }
       } catch (err) {
         console.error("Supabase sign up failed:", err);
+        // Automatic retry via proxy on network fetch error
+        try {
+          const creds = this.getCredentials();
+          this.initProxyClient(creds.anonKey);
+          if (this.client) {
+            const retryRes = await this.client.auth.signUp({
+              email: email.trim(),
+              password: password.trim(),
+              options: {
+                data: metadata
+              }
+            });
+            if (retryRes.data && retryRes.data.user) {
+              const user = await this.syncSupabaseUserToStore(retryRes.data.user);
+              const needsEmailConfirmation = !retryRes.data.session;
+              return {
+                success: true,
+                user: user,
+                pendingApproval: role !== 'trainee',
+                confirmationRequired: needsEmailConfirmation,
+                message: `Welcome to Capacity Connect, ${user.name}!`,
+                viaSupabase: true
+              };
+            }
+          }
+        } catch (retryErr) {
+          console.warn("Proxy sign up retry also failed:", retryErr);
+        }
+
         const errMsg = err.message === 'Failed to fetch'
-          ? 'Cannot reach Supabase API ("Failed to fetch"). Please check your Supabase Project URL in .env and ensure your project is active.'
+          ? 'Cannot reach Supabase API ("Failed to fetch"). Ensure local server is running, or check your internet connection.'
           : (err.message || "Registration failed");
         return { success: false, message: errMsg };
       }
