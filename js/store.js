@@ -26,6 +26,22 @@ class Store {
     if (!loaded) {
       loaded = JSON.parse(JSON.stringify(INITIAL_MOCK_DATA));
     }
+
+    // Ensure all courses have up-to-date imageUrl and imageBg from INITIAL_MOCK_DATA
+    if (loaded && loaded.courses) {
+      INITIAL_MOCK_DATA.courses.forEach(initialCourse => {
+        const existing = loaded.courses.find(c => c.id === initialCourse.id);
+        if (existing) {
+          if (!existing.imageUrl || existing.imageUrl !== initialCourse.imageUrl) {
+            existing.imageUrl = initialCourse.imageUrl;
+          }
+          if (!existing.imageBg) {
+            existing.imageBg = initialCourse.imageBg;
+          }
+        }
+      });
+    }
+
     if (!loaded.notifications) {
       loaded.notifications = [
         {
@@ -142,16 +158,11 @@ class Store {
     try {
       const stored = localStorage.getItem(CURRENT_USER_KEY);
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        if (parsed && parsed.id) return parsed;
       }
     } catch (e) {
       console.warn("Error reading auth state", e);
-    }
-    // Default to Trainee Priya Sharma for instant, vibrant demonstration!
-    const defaultUser = this.data.users.find(u => u.id === "usr-trainee-01");
-    if (defaultUser) {
-      this.setCurrentUser(defaultUser);
-      return defaultUser;
     }
     return null;
   }
@@ -638,6 +649,7 @@ class Store {
       enrolledCount: 0,
       rating: 5.0,
       reviewCount: 0,
+      imageUrl: courseData.imageUrl || "images/courses/course-cloud-architecture.jpg",
       imageBg: courseData.imageBg || "linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)",
       description: courseData.description,
       prerequisites: courseData.prerequisites || "Open to all enterprise trainees.",

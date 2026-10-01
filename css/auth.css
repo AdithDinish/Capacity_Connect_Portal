@@ -1,0 +1,273 @@
+/* ===================================================================
+   CAPACITY CONNECT - ROLE-BASED AUTHENTICATION & SUPABASE STYLING
+   =================================================================== */
+
+.auth-page-wrap {
+  min-height: calc(100vh - 140px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px;
+  position: relative;
+  background: radial-gradient(circle at 50% 20%, rgba(37, 99, 235, 0.06) 0%, transparent 60%),
+              radial-gradient(circle at 80% 80%, rgba(124, 58, 237, 0.05) 0%, transparent 50%);
+}
+
+.auth-card-container {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+/* Supabase Connection Status Bar */
+.supabase-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+  font-size: 0.8rem;
+  box-shadow: var(--shadow-sm);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.supabase-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.supabase-status-pill.connected {
+  background: #ECFDF5;
+  color: #059669;
+  border: 1px solid #A7F3D0;
+}
+
+.supabase-status-pill.mock {
+  background: #EFF6FF;
+  color: #2563EB;
+  border: 1px solid #BFDBFE;
+}
+
+.supabase-config-drawer {
+  background: var(--bg-surface-alt);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 20px;
+  display: none;
+}
+
+.supabase-config-drawer.show {
+  display: block;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Main Role Selection Cards */
+.auth-role-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.auth-role-card {
+  background: var(--bg-surface);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 16px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-role-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--text-muted);
+}
+
+.auth-role-card .role-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.auth-role-card .role-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.auth-role-card .role-card-desc {
+  font-size: 0.725rem;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+/* Specific Role Colors */
+.auth-role-card.role-trainee .role-icon-box {
+  background: var(--role-trainee-bg);
+  color: var(--role-trainee);
+}
+.auth-role-card.role-trainer .role-icon-box {
+  background: var(--role-trainer-bg);
+  color: var(--role-trainer);
+}
+.auth-role-card.role-admin .role-icon-box {
+  background: var(--role-admin-bg);
+  color: var(--role-admin);
+}
+
+/* Active Selected Role Card States */
+.auth-role-card.active.role-trainee {
+  border-color: var(--role-trainee);
+  background: #F8FAFC;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15), var(--shadow-md);
+}
+.auth-role-card.active.role-trainer {
+  border-color: var(--role-trainer);
+  background: #F8FAFC;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15), var(--shadow-md);
+}
+.auth-role-card.active.role-admin {
+  border-color: var(--role-admin);
+  background: #F8FAFC;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15), var(--shadow-md);
+}
+
+/* Auth Panel Card */
+.auth-main-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 32px 36px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+}
+
+.auth-mode-toggle {
+  display: flex;
+  background: var(--bg-surface-alt);
+  border-radius: var(--radius-full);
+  padding: 4px;
+  margin-bottom: 24px;
+  border: 1px solid var(--border-color);
+}
+
+.auth-mode-btn {
+  flex: 1;
+  text-align: center;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.auth-mode-btn.active {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-header-block {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.auth-header-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 8px 0 4px 0;
+}
+
+.auth-header-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* Role Banner in Form */
+.auth-role-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+  border: 1px solid transparent;
+}
+
+.auth-role-banner.role-trainee {
+  background: #EFF6FF;
+  border-color: #BFDBFE;
+  color: #1E40AF;
+}
+
+.auth-role-banner.role-trainer {
+  background: #F0FDFA;
+  border-color: #99F6E4;
+  color: #0F766E;
+}
+
+.auth-role-banner.role-admin {
+  background: #F5F3FF;
+  border-color: #DDD6FE;
+  color: #5B21B6;
+}
+
+/* Demo 1-Click Credentials Banner */
+.auth-demo-shortcut {
+  background: var(--bg-surface-alt);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  font-size: 0.8rem;
+}
+
+/* Role Specific Field Sections */
+.role-specific-fields {
+  display: none;
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+.role-specific-fields.active {
+  display: block;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .auth-main-panel {
+    padding: 24px 18px;
+  }
+  .auth-role-selector-grid {
+    grid-template-columns: 1fr;
+  }
+}

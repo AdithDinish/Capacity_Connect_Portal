@@ -15,12 +15,14 @@
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/auth.css">
   <link rel="stylesheet" href="css/dashboard.css">
   <link rel="stylesheet" href="css/assessment.css">
   <link rel="stylesheet" href="css/competency.css">
   <link rel="stylesheet" href="css/responsive.css">
 
   <!-- External Libraries (CDN with fallback) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -60,6 +62,9 @@
         <!-- Role Specific Portal Hub -->
         <a href="javascript:void(0)" class="nav-link" id="nav-portal-link" data-target="trainee-portal">
           <i data-lucide="layout-dashboard"></i> My Portal
+        </a>
+        <a href="javascript:void(0)" class="nav-link" data-target="auth" onclick="App.navigateTo('auth')">
+          <i data-lucide="user-plus"></i> Role Login
         </a>
       </nav>
 
@@ -142,8 +147,8 @@
 
         <!-- Guest Actions -->
         <div id="nav-guest-actions" class="flex items-center gap-xs hidden">
-          <button class="btn btn-sm btn-outline" onclick="App.openLoginModal()">Sign In</button>
-          <button class="btn btn-sm btn-primary" onclick="App.openRegisterModal()">Register</button>
+          <button class="btn btn-sm btn-outline" onclick="Auth.setMode('signin'); App.navigateTo('auth');">Sign In</button>
+          <button class="btn btn-sm btn-primary" onclick="Auth.setMode('signup'); App.navigateTo('auth');">Register</button>
         </div>
 
         <!-- Mobile Menu Button -->
@@ -257,7 +262,7 @@
               <p style="font-size:0.875rem; margin-bottom:16px;">
                 Build rich professional profiles with qualifications, work experience, and skills. Enroll in courses, access the Trainer Library, attempt timed MCQ benchmark tests, and download verifiable certificates.
               </p>
-              <button class="btn btn-sm btn-outline" onclick="Auth.loginAsDemo('trainee')">Explore Trainee Portal</button>
+              <button class="btn btn-sm btn-outline" onclick="Auth.setRole('trainee'); Auth.setMode('signin'); App.navigateTo('auth');">Explore Trainee Portal</button>
             </div>
 
             <!-- Trainer Card -->
@@ -270,7 +275,7 @@
               <p style="font-size:0.875rem; margin-bottom:16px;">
                 Manage subject competencies, author interactive questionnaires with cut-off deadlines, monitor real-time trainee performance metrics, and upload lectures, slides, and study playbooks.
               </p>
-              <button class="btn btn-sm btn-outline" onclick="Auth.loginAsDemo('trainer')">Explore Trainer Studio</button>
+              <button class="btn btn-sm btn-outline" onclick="Auth.setRole('trainer'); Auth.setMode('signin'); App.navigateTo('auth');">Explore Trainer Studio</button>
             </div>
 
             <!-- Admin Card -->
@@ -283,7 +288,7 @@
               <p style="font-size:0.875rem; margin-bottom:16px;">
                 Manage user approvals, reassign roles, monitor analytics charts (enrollments, certifications, assessment scores), publish announcements to the homepage, and run competency mapping.
               </p>
-              <button class="btn btn-sm btn-outline" onclick="Auth.loginAsDemo('admin')">Explore Admin Center</button>
+              <button class="btn btn-sm btn-outline" onclick="Auth.setRole('admin'); Auth.setMode('signin'); App.navigateTo('auth');">Explore Admin Center</button>
             </div>
           </div>
         </div>
@@ -376,6 +381,15 @@
          =================================================================== -->
     <div class="app-view hidden" id="assessment-active-view" style="padding: 32px 0 64px 0;">
       <!-- Injected by AssessmentView -->
+    </div>
+
+    <!-- ===================================================================
+         VIEW 9: ROLE-BASED AUTHENTICATION (SIGN IN & SIGN UP)
+         =================================================================== -->
+    <div class="app-view hidden" id="auth-view">
+      <div id="auth-view-content">
+        <!-- Injected dynamically by Auth.renderAuthPage() -->
+      </div>
     </div>
 
   </main>
@@ -1235,6 +1249,7 @@
   <!-- Application Scripts -->
   <script src="js/mockData.js"></script>
   <script src="js/store.js"></script>
+  <script src="js/supabaseConfig.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/traineeView.js"></script>
   <script src="js/trainerView.js"></script>

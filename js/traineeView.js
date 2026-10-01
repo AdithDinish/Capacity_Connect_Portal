@@ -8,7 +8,7 @@ const TraineeView = {
   activeTab: 'profile',
 
   init() {
-    this.bindEvents();
+    // Trainee controller ready
   },
 
   render() {
@@ -231,14 +231,15 @@ const TraineeView = {
         ${enrollments.map(enr => {
           const course = allCourses.find(c => c.id === enr.courseId);
           if (!course) return '';
-          return `
+            const bgStyle = course.imageUrl ? `background-image: url('${course.imageUrl}');` : `background: ${course.imageBg};`;
+            return `
             <div class="course-card">
-              <div class="course-thumb" style="background: ${course.imageBg};">
+              <div class="course-thumb" style="${bgStyle}">
                 <div class="course-thumb-content">
                   <span class="badge ${enr.progress === 100 ? 'badge-success' : 'badge-primary'}">
                     ${enr.progress === 100 ? 'Completed' : 'In Progress'}
                   </span>
-                  <span style="color:#fff; font-size:0.75rem; font-weight:600;"><i data-lucide="clock"></i> ${course.duration}</span>
+                  <span style="color:#fff; font-size:0.75rem; font-weight:600;"><i data-lucide="clock" style="width:12px; height:12px; display:inline;"></i> ${course.duration}</span>
                 </div>
               </div>
               <div class="course-body">
@@ -838,13 +839,25 @@ const TraineeView = {
 
     const feedbacks = store.getFeedbackForCourse(courseId);
 
+    const heroBg = course.imageUrl ? `background-image: url('${course.imageUrl}');` : `background: ${course.imageBg};`;
+
     body.innerHTML = `
-      <div style="margin-bottom:16px;">
-        <span class="badge badge-primary">${course.subject}</span>
-        <h2 style="margin: 8px 0 4px 0;">${course.title}</h2>
-        <p style="color:var(--text-muted); font-size:0.9rem;">Instructor: ${course.trainerName} | Duration: ${course.duration} | Level: ${course.level}</p>
+      <div class="course-detail-hero" style="${heroBg}">
+        <div class="course-detail-hero-content">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span class="badge badge-primary">${course.subject}</span>
+            <span class="badge badge-warning" style="font-weight:700;">★ ${course.rating} / 5.0</span>
+          </div>
+          <h2 style="color:#fff; margin:0 0 10px 0; font-size:1.6rem; font-weight:800; text-shadow:0 2px 4px rgba(0,0,0,0.6);">${course.title}</h2>
+          <div style="color:rgba(255,255,255,0.95); font-size:0.875rem; display:flex; flex-wrap:wrap; gap:16px; align-items:center; text-shadow:0 1px 3px rgba(0,0,0,0.6);">
+            <span><i data-lucide="user" style="width:14px; height:14px; display:inline;"></i> <strong>Instructor:</strong> ${course.trainerName}</span>
+            <span><i data-lucide="clock" style="width:14px; height:14px; display:inline;"></i> <strong>Duration:</strong> ${course.duration}</span>
+            <span><i data-lucide="bar-chart-2" style="width:14px; height:14px; display:inline;"></i> <strong>Level:</strong> ${course.level}</span>
+            <span><i data-lucide="users" style="width:14px; height:14px; display:inline;"></i> <strong>${course.enrolledCount}</strong> Enrolled</span>
+          </div>
+        </div>
       </div>
-      <p style="margin-bottom:20px;">${course.description}</p>
+      <p style="margin-bottom:20px; font-size:0.95rem; line-height:1.6;">${course.description}</p>
       
       <div style="background:var(--bg-surface-alt); padding:16px; border-radius:var(--radius-md); margin-bottom:24px; border:1px solid var(--border-color);">
         <h4 style="margin-bottom:8px;">Prerequisites</h4>
@@ -1010,19 +1023,23 @@ const TraineeView = {
           </div>
 
           <!-- Video Stream Lecture Simulation -->
-          <div style="background:#0F172A; border-radius:var(--radius-md); padding:20px; color:#fff; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; box-shadow:var(--shadow-md);">
-            <div style="display:flex; align-items:center; gap:16px;">
-              <div style="width:48px; height:48px; border-radius:50%; background:var(--brand-accent); display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="App.showToast('Lecture Stream', 'Playing recorded audio lecture...', 'info')">
-                <i data-lucide="play" style="width:24px; height:24px; color:#fff; margin-left:2px;"></i>
+          <div class="classroom-lecture-hero" style="${course.imageUrl ? `background-image: url('${course.imageUrl}');` : `background: ${course.imageBg};`}">
+            <div class="classroom-lecture-hero-overlay">
+              <div style="display:flex; align-items:center; gap:16px;">
+                <div style="width:52px; height:52px; border-radius:50%; background:var(--brand-accent); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 0 16px rgba(37, 99, 235, 0.6); transition:transform 0.2s;" onclick="App.showToast('Lecture Stream', 'Playing recorded audio/video masterclass lecture...', 'info')">
+                  <i data-lucide="play" style="width:26px; height:26px; color:#fff; margin-left:3px;"></i>
+                </div>
+                <div>
+                  <div style="font-weight:700; font-size:1.05rem; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,0.8);">Lecture Stream: ${currentModule.title}</div>
+                  <div style="font-size:0.825rem; color:#E2E8F0; text-shadow:0 1px 2px rgba(0,0,0,0.8);">35 mins • High-Definition Stream with Subtitles • Instructor: ${course.trainerName}</div>
+                </div>
               </div>
-              <div>
-                <div style="font-weight:700; font-size:0.95rem; color:#fff;">Interactive Audio/Video Lecture: ${currentModule.title}</div>
-                <div style="font-size:0.8rem; color:#94A3B8;">35 mins • High-Definition Stream with Subtitles</div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-sm btn-outline" style="color:#fff; border-color:rgba(255,255,255,0.4); background:rgba(15,23,42,0.6);" onclick="App.showToast('Lecture Notes', 'Module study notes downloaded.', 'success')">
+                  <i data-lucide="file-text"></i> Lesson Notes
+                </button>
               </div>
             </div>
-            <button class="btn btn-sm btn-outline" style="color:#fff; border-color:rgba(255,255,255,0.25);" onclick="App.showToast('Lecture Notes', 'Module study notes downloaded.', 'success')">
-              <i data-lucide="file-text"></i> Lesson Notes
-            </button>
           </div>
 
           <!-- Executive Learning Takeaways -->

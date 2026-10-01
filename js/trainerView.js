@@ -8,7 +8,7 @@ const TrainerView = {
   activeTab: 'monitoring',
 
   init() {
-    this.bindEvents();
+    // Trainer controller ready
   },
 
   render() {

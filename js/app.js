@@ -21,13 +21,26 @@ const App = {
 
     this.renderNotifications();
 
-    // Default route
-    const user = store.getCurrentUser();
-    if (user) {
-      this.navigateByRole(user.role);
+    // Initial route based on hash or user state
+    const hash = (window.location.hash || '').replace('#', '').trim();
+    if (hash && document.getElementById(`${hash}-view`)) {
+      this.navigateTo(hash);
     } else {
-      this.navigateTo('home');
+      const user = store.getCurrentUser();
+      if (user) {
+        this.navigateByRole(user.role);
+      } else {
+        this.navigateTo('home');
+      }
     }
+
+    // Hash change listener
+    window.addEventListener('hashchange', () => {
+      const currentHash = (window.location.hash || '').replace('#', '').trim();
+      if (currentHash && currentHash !== this.currentView && document.getElementById(`${currentHash}-view`)) {
+        this.navigateTo(currentHash);
+      }
+    });
 
     // Subscribe to store updates
     store.subscribe(() => {
@@ -47,11 +60,17 @@ const App = {
     if (this.currentView === 'competency') CompetencyView.render();
     if (this.currentView === 'courses') this.renderCourseCatalog();
     if (this.currentView === 'library') this.renderGlobalLibrary();
+    if (this.currentView === 'auth') Auth.renderAuthPage();
   },
 
   // Navigation & View Routing
   navigateTo(viewName) {
     this.currentView = viewName;
+
+    // Sync URL hash
+    if (window.location.hash.replace('#', '') !== viewName) {
+      window.location.hash = viewName;
+    }
 
     // Hide all view sections
     document.querySelectorAll('.app-view').forEach(v => v.classList.add('hidden'));
@@ -78,6 +97,7 @@ const App = {
     else if (viewName === 'trainee-portal') TraineeView.render();
     else if (viewName === 'trainer-portal') TrainerView.render();
     else if (viewName === 'admin-portal') AdminView.render();
+    else if (viewName === 'auth') Auth.renderAuthPage();
 
     if (window.lucide) window.lucide.createIcons();
   },
@@ -160,11 +180,13 @@ const App = {
   },
 
   openLoginModal() {
-    this.openModal('modal-login');
+    Auth.setMode('signin');
+    this.navigateTo('auth');
   },
 
   openRegisterModal() {
-    this.openModal('modal-register');
+    Auth.setMode('signup');
+    this.navigateTo('auth');
   },
 
   // --- Dynamic Notifications System ---
@@ -916,12 +938,13 @@ const App = {
       const featured = courses.filter(c => c.isFeatured || c.isNew).slice(0, 3);
       newContentGrid.innerHTML = featured.map(c => {
         const isEnrolled = user && user.role === 'trainee' && store.getEnrollment(c.id, user.id);
+        const bgStyle = c.imageUrl ? `background-image: url('${c.imageUrl}');` : `background: ${c.imageBg};`;
         return `
           <div class="course-card">
-            <div class="course-thumb" style="background: ${c.imageBg};">
+            <div class="course-thumb" style="${bgStyle}">
               <div class="course-thumb-content">
                 <span class="badge ${c.isNew ? 'badge-warning' : 'badge-primary'}">${c.isNew ? 'NEW TRACK' : 'FEATURED'}</span>
-                <span style="color:#fff; font-size:0.75rem; font-weight:600;">${c.duration}</span>
+                <span style="color:#fff; font-size:0.75rem; font-weight:600;"><i data-lucide="clock" style="width:12px; height:12px; display:inline;"></i> ${c.duration}</span>
               </div>
             </div>
             <div class="course-body">
@@ -937,7 +960,7 @@ const App = {
             </div>
             <div class="course-footer">
               <button class="btn btn-sm btn-outline" onclick="TraineeView.openCourseDetailModal('${c.id}')">
-                Syllabus
+                <i data-lucide="eye"></i> Syllabus
               </button>
               ${isEnrolled ? `
                 <button class="btn btn-sm btn-primary" onclick="TraineeView.openCoursePlayer('${c.id}')">
@@ -945,7 +968,7 @@ const App = {
                 </button>
               ` : `
                 <button class="btn btn-sm btn-primary" onclick="App.handleEnrollClick('${c.id}')">
-                  Enroll Now
+                  <i data-lucide="plus-circle"></i> Enroll Now
                 </button>
               `}
             </div>
@@ -989,12 +1012,13 @@ const App = {
 
     container.innerHTML = courses.map(c => {
       const isEnrolled = user && user.role === 'trainee' && store.getEnrollment(c.id, user.id);
+      const bgStyle = c.imageUrl ? `background-image: url('${c.imageUrl}');` : `background: ${c.imageBg};`;
       return `
         <div class="course-card">
-          <div class="course-thumb" style="background: ${c.imageBg};">
+          <div class="course-thumb" style="${bgStyle}">
             <div class="course-thumb-content">
               <span class="badge ${c.isNew ? 'badge-warning' : 'badge-primary'}">${c.level}</span>
-              <span style="color:#fff; font-size:0.75rem; font-weight:600;"><i data-lucide="clock"></i> ${c.duration}</span>
+              <span style="color:#fff; font-size:0.75rem; font-weight:600;"><i data-lucide="clock" style="width:12px; height:12px; display:inline;"></i> ${c.duration}</span>
             </div>
           </div>
           <div class="course-body">
