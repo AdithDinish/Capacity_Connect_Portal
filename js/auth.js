@@ -80,6 +80,26 @@ const Auth = {
     }
   },
 
+  async testSupabaseConfig() {
+    const url = document.getElementById('sb-input-url').value.trim();
+    const key = document.getElementById('sb-input-key').value.trim();
+
+    if (!url || !key) {
+      App.showToast("Missing Credentials", "Please enter both Supabase URL and Anon Key to test.", "warning");
+      return;
+    }
+
+    App.showToast("Testing Connection...", "Verifying Supabase project reachability...", "info");
+    if (window.SupabaseConfig) {
+      const res = await window.SupabaseConfig.testConnection(url, key);
+      if (res.success) {
+        App.showToast("Connection Successful", res.message, "success");
+      } else {
+        App.showToast("Connection Failed", res.message, "error");
+      }
+    }
+  },
+
   saveSupabaseConfig(e) {
     if (e) e.preventDefault();
     const url = document.getElementById('sb-input-url').value.trim();
@@ -205,8 +225,11 @@ const Auth = {
                 <label class="form-label" style="font-size:0.75rem;">Supabase Anon / Public Key</label>
                 <input type="password" class="form-input" id="sb-input-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." value="${creds.anonKey}" style="font-size:0.8rem; padding:6px 10px;">
               </div>
-              <div style="display:flex; gap:8px; justify-content:flex-end;">
-                <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('sb-input-url').value=''; document.getElementById('sb-input-key').value=''; Auth.saveSupabaseConfig(event);" style="font-size:0.75rem;">Clear / Reset</button>
+              <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
+                <button type="button" class="btn btn-sm btn-outline" onclick="Auth.testSupabaseConfig()" style="font-size:0.75rem;">
+                  <i data-lucide="radio" style="width:12px; height:12px; display:inline;"></i> Test Connection
+                </button>
+                <button type="button" class="btn btn-sm btn-ghost" onclick="document.getElementById('sb-input-url').value=''; document.getElementById('sb-input-key').value=''; Auth.saveSupabaseConfig(event);" style="font-size:0.75rem;">Clear / Reset</button>
                 <button type="submit" class="btn btn-sm btn-primary" style="font-size:0.75rem;">Save & Connect</button>
               </div>
             </form>
@@ -490,6 +513,32 @@ const Auth = {
     const bio = document.getElementById('reg-bio').value.trim();
 
     const role = this.selectedRole;
+    let qualification = '';
+    let work_experience = '';
+    let interests = [];
+    let skills = [];
+
+    if (role === 'trainee') {
+      qualification = document.getElementById('reg-qual') ? document.getElementById('reg-qual').value.trim() : '';
+      const rawInterests = document.getElementById('reg-interests') ? document.getElementById('reg-interests').value.trim() : '';
+      if (rawInterests) {
+        interests = rawInterests.split(',').map(s => s.trim()).filter(Boolean);
+        skills = [...interests];
+      } else {
+        interests = ['Cloud Architecture', 'Digital Transformation'];
+        skills = ['Cloud Architecture', 'Digital Transformation'];
+      }
+      work_experience = title || 'Enterprise Trainee';
+    } else if (role === 'trainer') {
+      const comps = document.getElementById('reg-competencies') ? document.getElementById('reg-competencies').value.trim() : '';
+      if (comps) {
+        skills = comps.split(',').map(c => c.trim()).filter(Boolean);
+      }
+      const expYears = document.getElementById('reg-exp-years') ? document.getElementById('reg-exp-years').value.trim() : '5';
+      qualification = title || 'Certified Faculty Instructor';
+      work_experience = `${expYears} years instructional & industry experience`;
+    }
+
     const profileData = {
       name,
       email,
@@ -497,22 +546,17 @@ const Auth = {
       department,
       title,
       bio,
-      qualifications: [],
-      skills: [],
-      competencies: []
+      qualification,
+      work_experience,
+      interests,
+      skills,
+      specialization: department,
+      qualifications: qualification ? [{ degree: qualification, institution: "Verified Academy", year: "2024" }] : [],
+      experience: work_experience ? [{ role: work_experience, company: department, period: "Present" }] : [],
+      competencies: skills.map(s => ({ subject: s, proficiency: 5, certified: true }))
     };
 
-    if (role === 'trainee') {
-      const qual = document.getElementById('reg-qual') ? document.getElementById('reg-qual').value.trim() : '';
-      if (qual) {
-        profileData.qualifications = [{ degree: qual, institution: "Enterprise Academy", year: "2024" }];
-      }
-    } else if (role === 'trainer') {
-      const comps = document.getElementById('reg-competencies') ? document.getElementById('reg-competencies').value.trim() : '';
-      if (comps) {
-        profileData.competencies = comps.split(',').map(c => ({ subject: c.trim(), proficiency: 5, certified: true }));
-      }
-    } else if (role === 'admin') {
+    if (role === 'admin') {
       const adminToken = document.getElementById('reg-admin-token') ? document.getElementById('reg-admin-token').value.trim() : '';
       if (adminToken && adminToken !== 'CAPACITY-ADMIN-2026') {
         App.showToast("Security Key Notice", "Using default authorization mode for registration.", "info");
